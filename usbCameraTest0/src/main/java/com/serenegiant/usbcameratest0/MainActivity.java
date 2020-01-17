@@ -125,6 +125,37 @@ public class MainActivity extends BaseActivity implements CameraDialog.CameraDia
 		}
 	};
 
+
+	private void setVideoSize() {
+
+		int videoWidth = mUVCCamera.getPreviewSize().width;
+		int videoHeight = mUVCCamera.getPreviewSize().height;
+
+
+		// // Get the dimensions of the video
+		float videoProportion = (float) videoWidth / (float) videoHeight;
+
+		// Get the width of the screen
+		int screenWidth = getWindowManager().getDefaultDisplay().getWidth();
+		int screenHeight = getWindowManager().getDefaultDisplay().getHeight();
+		float screenProportion = (float) screenWidth / (float) screenHeight;
+
+		// Get the SurfaceView layout parameters
+		android.view.ViewGroup.LayoutParams lp = mUVCCameraView.getLayoutParams();
+		if (videoProportion > screenProportion) {
+			lp.width = screenWidth;
+			lp.height = (int) ((float) screenWidth / videoProportion);
+		} else {
+			lp.width = (int) (videoProportion * (float) screenHeight);
+			lp.height = screenHeight;
+		}
+
+		Log.i(TAG,lp.toString());
+
+		// Commit the layout parameters
+		mUVCCameraView.setLayoutParams(lp);
+	}
+
 	private final OnDeviceConnectListener mOnDeviceConnectListener = new OnDeviceConnectListener() {
 		@Override
 		public void onAttach(final UsbDevice device) {
@@ -165,9 +196,19 @@ public class MainActivity extends BaseActivity implements CameraDialog.CameraDia
 							camera.setPreviewDisplay(mPreviewSurface);
 							camera.startPreview();
 							isPreview = true;
+
 						}
 						synchronized (mSync) {
 							mUVCCamera = camera;
+
+							runOnUiThread(new Runnable(){
+								@Override
+								public void run(){
+									setVideoSize();
+
+								}
+							});
+
 						}
 					}
 				}
